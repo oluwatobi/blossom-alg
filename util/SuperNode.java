@@ -1,10 +1,13 @@
 package util;
 
-public class SuperNode {
+public class SuperNode extends Node {
 
-  private final Integer value;
+  public SuperNode(int value) {
+    super(value);
+  }
 
-  public SuperNode(Integer value) {
-    this.value = value;
+  @Override
+  public String toString() {
+    return "<~" + value + "~>";
   }
 }

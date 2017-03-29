@@ -5,6 +5,7 @@ import util.Node;
 import util.SuperNode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,10 +17,32 @@ public class Main {
   public static void main(String[] args) {
     Graph graph = readGraphFile(args[0]);
     List<Edge> matching = blossomAlgorithm(graph);
+    System.out.println("Graph Matching:\n\t" + matching);
   }
 
   private static Graph readGraphFile(String fileName) {
-    throw new RuntimeException();
+    File file;
+    String[] line;
+    Scanner scan = null;
+    Graph graph = new Graph();
+    try {
+      file = new File(fileName);
+      scan = new Scanner(file);
+      while (scan.hasNextLine()) {
+        line = scan.nextLine().split(" ");
+        graph.addEdge(Integer.parseInt(line[0]), Integer.parseInt(line[1]));
+      }
+    } catch(IOException e) {
+      e.printStackTrace();
+      // There is NO point in trying to continue
+      // processing an empty graph.
+      System.exit(1);
+    } finally {
+      if (scan != null) {
+        scan.close();
+      }
+    }
+    return graph;
   }
 
   public static List<Edge> blossomAlgorithm(Graph graph) {
@@ -41,7 +64,7 @@ public class Main {
   private static List<Edge> findAugPath(Graph graph, List<Edge> matching) {
     List<Edge> augPath;
     Forest forest = new Forest();
-    List<Node> nodesToCheck = graph.getExposedVertices();
+    Set<Node> nodesToCheck = graph.getExposedVertices();
     for (Node node : nodesToCheck) {
       forest.addTreeRoot(node);
       // TODO(oluwatobi): Set root of the Forest Node be itself
