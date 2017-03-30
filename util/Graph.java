@@ -31,9 +31,15 @@ public class Graph {
   public void addEdge(Integer from, Integer to) {
     Node f = addOrRetrieveNode(from);
     Node t = addOrRetrieveNode(to);
-    Edge edge = new Edge(t, f);
+    Edge edge = new Edge(f, t);
     f.addEdge(t, edge);
     edgeSet.add(edge);
+  }
+
+  public Edge getEdge(Integer from, Integer to) {
+    Node f = nodeMap.get(from);
+    Node t = nodeMap.get(to);
+    return f.getEdge(t);
   }
 
   protected Node addOrRetrieveNode(Integer value) {

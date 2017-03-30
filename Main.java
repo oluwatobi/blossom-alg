@@ -66,6 +66,7 @@ public class Main {
     List<Edge> augPath;
     Forest forest = new Forest();
     Set<Node> nodesToCheck = graph.getExposedVertices();
+    System.out.println("Adding to forest");
     for (Node node : nodesToCheck) {
       forest.addTreeRoot(node);
     }
@@ -77,14 +78,15 @@ public class Main {
       for (Edge edge : v.getEdgeList()) {
         w = edge.to;
         if (!forest.contains(w)) {
-          System.out.println(v);
-          System.out.println("Matching: " + matching);
-          forest.addToForest(matching, vForest, w);
+          forest.addToForest(matching, v, w);
         } else {
+          System.out.println("v root: " + v.getForestRoot());
+          System.out.println("w root: " + w.getForestRoot());
           if (forest.distance(w, w.getForestRoot()) % 2 == 0) {
             if (v.getForestRoot() != w.getForestRoot()) {
-              augPath = returnAugPath(forest, v, w);
+              augPath = returnAugPath(graph, forest, v, w);
             } else {
+              System.out.println("BLOSSOM");
               augPath = blossomRecursion(graph, matching, forest, v, w);
             }
             return augPath;
@@ -95,18 +97,23 @@ public class Main {
         graph.markEdge(v, w);
       }
     }
-    System.out.println("NO HIT");
+    System.out.println("Loss");
     // Returning the empty path.
     return new ArrayList<>();
   }
 
-  private static List<Edge> returnAugPath(Forest forest, Node v, Node w) {
+  private static List<Edge> returnAugPath(Graph graph, Forest forest, Node v, Node w) {
     Node rootV = v.getForestRoot();
     Node rootW = w.getForestRoot();
 
-    List<Edge> path = forest.shortestPath(rootV, v);
-    path.addAll(forest.shortestPath(w, rootW));
-    return path;
+    List<Edge> path1 = forest.shortestPath(rootV, v);
+    List<Edge> path2 = forest.shortestPath(w, rootW);
+    Node vGraph = graph.getNode(v.value);
+    Node wGraph = graph.getNode(w.value);
+    Edge edge = vGraph.getEdge(wGraph);
+    path1.add(edge);
+    path1.addAll(path2);
+    return path1;
   }
 
   private static List<Edge> blossomRecursion(Graph graph, List<Edge> matching,
@@ -115,19 +122,45 @@ public class Main {
     blossom.add(new Edge(blossom.get(blossom.size() - 1).from, v));
     Graph contractedGraph = graph.contractBlossom(blossom);
     SuperNode contractedNode = contractedGraph.getContractedNode();
-    List<Edge> contractedMatching = contractMatching(blossom, contractedNode);
+    List<Edge> contractedMatching = contractMatching(contractedGraph,
+        matching, blossom, contractedNode);
     List<Edge> augPath = findAugPath(contractedGraph,
         contractedMatching);
-    if (augPath.contains(w)) {
+    if (containsEdgeWithNode(augPath, w)) {
       augPath = liftPathWithBlossom(augPath, blossom);
     }
     return augPath;
   }
 
-  private static List<Edge> contractMatching(List<Edge> blossom,
-      SuperNode contractedNode) {
-    // TODO(oluwatobi): write that code breh.
-    throw new RuntimeException();
+  private static List<Edge> contractMatching(Graph contracted,
+      List<Edge> matching, List<Edge> blossom, SuperNode contractedNode) {
+    List<Edge> contractedMatching = new ArrayList<>();
+    Set<Node> blossomNodes = new HashSet<>();
+    for (Edge edge : blossom) {
+      blossomNodes.add(edge.from);
+      blossomNodes.add(edge.to);
+    }
+    for (Edge edge : matching) {
+      if (blossomNodes.contains(edge.from)
+          && !blossomNodes.contains(edge.to)) {
+        contractedMatching.add(
+            contracted.getEdge(contractedNode.value, edge.to.value));
+      } else if (blossomNodes.contains(edge.to)
+          && !blossomNodes.contains(edge.from)) {
+        contractedMatching.add(
+            contracted.getEdge(edge.from.value, contractedNode.value));
+      }
+    }
+    return contractedMatching;
+  }
+
+  private static boolean containsEdgeWithNode(List<Edge> path, Node w) {
+    for (Edge edge : path) {
+      if (edge.from.value == w.value || edge.to.value == w.value) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static List<Edge> liftPathWithBlossom(List<Edge> augPath,
@@ -137,7 +170,11 @@ public class Main {
   }
 
   private static void addAltEdges(List<Edge> augPath, List<Edge> matching) {
-    // TODO(oluwatobi): write that code breh.
-    throw new RuntimeException();
+    Set<Edge> checkSet = new HashSet<>(matching);
+    for(int i = 0; i < augPath.size(); i += 2) {
+      if (!checkSet.contains(augPath.get(i))) {
+        matching.add(augPath.get(i));
+      }
+    }
   }
 }

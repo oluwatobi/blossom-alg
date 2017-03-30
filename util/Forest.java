@@ -32,7 +32,7 @@ public class Forest {
   }
 
   public boolean contains(Node node) {
-    return nodeSet.contains(node);
+    return forestMap.containsKey(node.value);
   }
 
   public void addToForest(List<Edge> edges, Node v, Node w) {
@@ -72,14 +72,12 @@ public class Forest {
   }
 
   private List<Edge> dfs(Node v, Node w) {
-    Graph tree = forestMap.get(v.getForestRoot());
+    Graph tree = forestMap.get(v.getForestRoot().value);
     Node vInt = tree.getNode(v.value);
     Node wInt = tree.getNode(w.value);
     List<Edge> path = new ArrayList<>();
-    if (dfs(path, vInt, wInt)) {
-      return path;
-    }
-    return null;
+    dfs(path, vInt, wInt);
+    return path;
   }
 
   private boolean dfs(List<Edge> path, Node curr, Node goal) {
@@ -101,5 +99,10 @@ public class Forest {
       }
     }
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return forestMap.toString();
   }
 }
