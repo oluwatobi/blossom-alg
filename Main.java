@@ -17,6 +17,7 @@ public class Main {
   public static void main(String[] args) {
     Graph graph = readGraphFile(args[0]);
     List<Edge> matching = blossomAlgorithm(graph);
+    System.out.println("Graph Matching size: " + matching.size());
     System.out.println("Graph Matching:\n\t" + matching);
   }
 
@@ -67,18 +68,19 @@ public class Main {
     Set<Node> nodesToCheck = graph.getExposedVertices();
     for (Node node : nodesToCheck) {
       forest.addTreeRoot(node);
-      // TODO(oluwatobi): Set root of the Forest Node be itself
-      // whenever an add occurs.
     }
     graph.markEdges(matching);
-    List<Node> forestNodes = forest.getNodeList();
-    for (Node v : forestNodes) {
-      for (Node w : v.getAdjacentNodeList()) {
+    Set<Node> forestNodes = forest.getNodes();
+    Node v, w;
+    for (Node vForest : forestNodes) {
+      v = graph.getNode(vForest.value);
+      for (Edge edge : v.getEdgeList()) {
+        w = edge.to;
         if (!forest.contains(w)) {
-          // TODO(oluwatobi): implementation of the addToForest function.
-          forest.addToForest(matching, v, w);
+          System.out.println(v);
+          System.out.println("Matching: " + matching);
+          forest.addToForest(matching, vForest, w);
         } else {
-          // TODO(oluwatobi): implementation of the distance function.
           if (forest.distance(w, w.getForestRoot()) % 2 == 0) {
             if (v.getForestRoot() != w.getForestRoot()) {
               augPath = returnAugPath(forest, v, w);
@@ -93,6 +95,7 @@ public class Main {
         graph.markEdge(v, w);
       }
     }
+    System.out.println("NO HIT");
     // Returning the empty path.
     return new ArrayList<>();
   }
@@ -123,11 +126,13 @@ public class Main {
 
   private static List<Edge> contractMatching(List<Edge> blossom,
       SuperNode contractedNode) {
+    // TODO(oluwatobi): write that code breh.
     throw new RuntimeException();
   }
 
   private static List<Edge> liftPathWithBlossom(List<Edge> augPath,
       List<Edge> blossom) {
+    // TODO(oluwatobi): write that code breh.
     throw new RuntimeException();
   }
 

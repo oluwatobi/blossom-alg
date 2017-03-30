@@ -14,6 +14,7 @@ public class Graph {
   private Set<Edge> markedEdges;
   private Map<Node, List<Edge>> edgeMaping;
   private Set<Node> exposedVerts;
+  protected SuperNode contractedNode;
 
   public Graph() {
     this.nodeMap = new HashMap<>();
@@ -45,6 +46,10 @@ public class Graph {
     return node;
   }
 
+  public Node getNode(Integer value) {
+    return nodeMap.get(value);
+  }
+
   public Set<Node> getExposedVertices() {
     return exposedVerts;
   }
@@ -67,10 +72,42 @@ public class Graph {
   }
 
   public Graph contractBlossom(List<Edge> blossom) {
-    throw new RuntimeException();
+    Graph contracted = new Graph();
+    Set<Node> blossomNodes = new HashSet<>();
+    Set<Edge> newEdgeSet = new HashSet<>();
+    for (Edge edge : blossom) {
+      blossomNodes.add(edge.from);
+      blossomNodes.add(edge.to);
+    }
+    SuperNode node = new SuperNode(blossom.get(blossom.size() - 1).from.value);
+    for (Edge edge : edgeSet) {
+      if (blossomNodes.contains(edge.from) && blossomNodes.contains(edge.to)) {
+        // edge internal to the blossom.
+      } else {
+        if (blossomNodes.contains(edge.from)) {
+          newEdgeSet.add(new Edge(node, edge.to));
+        } else if (blossomNodes.contains(edge.to)) {
+          newEdgeSet.add(new Edge(edge.from, node));
+        }
+      }
+    }
+
+    contracted.contractedNode = node;
+    for (Edge edge : newEdgeSet) {
+      contracted.addEdge(edge.from.value, edge.to.value);
+      if (edge.marked) {
+        contracted.markEdge(edge.from, edge.to);
+      }
+    }
+    return contracted;
   }
 
   public SuperNode getContractedNode() {
-    throw new RuntimeException();
+    return contractedNode;
+  }
+
+  @Override
+  public String toString() {
+    return nodeMap.toString();
   }
 }
