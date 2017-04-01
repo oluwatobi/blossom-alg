@@ -56,15 +56,16 @@ public class Node {
   }
 
   @Override
-  public String toString() {
-    StringBuilder strBldr = new StringBuilder();
-    strBldr.append("{");
-    for(Node node : nodeSet) {
-      strBldr.append("<");
-      strBldr.append(node.value);
-      strBldr.append(">");
+  public boolean equals(Object obj) {
+    if (obj instanceof Node) {
+      Node objNode = (Node) obj;
+      return this.value.equals(objNode.value);
     }
-    strBldr.append("}");
-    return "<" + value + "> : " + strBldr.toString();
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "<" + value + ">";
   }
 }

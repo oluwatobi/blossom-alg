@@ -13,6 +13,15 @@ public class Edge {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Edge) {
+      Edge objEdge = (Edge) obj;
+      return this.from.equals(objEdge.from) && this.to.equals(objEdge.to);
+    }
+    return false;
+  }
+
+  @Override
   public String toString() {
     StringBuilder strBldr = new StringBuilder();
     strBldr.append("(");

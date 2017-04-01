@@ -53,20 +53,19 @@ public class Main {
   }
 
   private static List<Edge> findMaxMatching(Graph graph, List<Edge> matching) {
-    List<Edge> augPath = findAugPath(graph, matching);
-    if (augPath.isEmpty()) {
-      return matching;
-    } else {
+    List<Edge> augPath;
+    do {
+      augPath = findAugPath(graph, matching);
       addAltEdges(augPath, matching);
-      return findMaxMatching(graph, matching);
-    }
+    } while (!augPath.isEmpty());
+
+    return matching;
   }
 
   private static List<Edge> findAugPath(Graph graph, List<Edge> matching) {
     List<Edge> augPath;
     Forest forest = new Forest();
     Set<Node> nodesToCheck = graph.getExposedVertices();
-    System.out.println("Adding to forest");
     for (Node node : nodesToCheck) {
       forest.addTreeRoot(node);
     }
@@ -76,28 +75,26 @@ public class Main {
     for (Node vForest : forestNodes) {
       v = graph.getNode(vForest.value);
       for (Edge edge : v.getEdgeList()) {
-        w = edge.to;
-        if (!forest.contains(w)) {
-          forest.addToForest(matching, v, w);
-        } else {
-          System.out.println("v root: " + v.getForestRoot());
-          System.out.println("w root: " + w.getForestRoot());
-          if (forest.distance(w, w.getForestRoot()) % 2 == 0) {
-            if (v.getForestRoot() != w.getForestRoot()) {
-              augPath = returnAugPath(graph, forest, v, w);
-            } else {
-              System.out.println("BLOSSOM");
-              augPath = blossomRecursion(graph, matching, forest, v, w);
-            }
-            return augPath;
+        if (!edge.marked) {
+          w = edge.to;
+          if (!forest.contains(w)) {
+            forest.addToForest(matching, v, w);
           } else {
-            // Do nothing.
+            if (forest.distance(w, w.getForestRoot()) % 2 == 0) {
+              if (v.getForestRoot() != w.getForestRoot()) {
+                augPath = returnAugPath(graph, forest, v, w);
+              } else {
+                augPath = blossomRecursion(graph, matching, forest, v, w);
+              }
+              return augPath;
+            } else {
+              // Do nothing.
+            }
           }
+          graph.markEdge(v, w);
         }
-        graph.markEdge(v, w);
       }
     }
-    System.out.println("Loss");
     // Returning the empty path.
     return new ArrayList<>();
   }
@@ -170,11 +167,20 @@ public class Main {
   }
 
   private static void addAltEdges(List<Edge> augPath, List<Edge> matching) {
-    Set<Edge> checkSet = new HashSet<>(matching);
-    for(int i = 0; i < augPath.size(); i += 2) {
-      if (!checkSet.contains(augPath.get(i))) {
+    Set<Node> nodeCheck = new HashSet<>();
+    for (Edge edge : matching) {
+      nodeCheck.add(edge.from);
+      nodeCheck.add(edge.to);
+    }
+    for(int i = 0; i < augPath.size() && matching.size() < 9; i += 2) {
+
+      if (!nodeCheck.contains(augPath.get(i).from)
+          || !nodeCheck.contains(augPath.get(i).to)) {
         matching.add(augPath.get(i));
+        nodeCheck.add(augPath.get(i).from);
+        nodeCheck.add(augPath.get(i).to);
       }
+      System.out.println(matching);
     }
   }
 }
