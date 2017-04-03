@@ -74,6 +74,8 @@ public class Graph {
     Edge edge = v.getEdge(w);
     edgeSet.remove(edge);
     markedEdges.add(edge);
+    exposedVerts.remove(v);
+    exposedVerts.remove(w);
     edge.marked = true;
   }
 

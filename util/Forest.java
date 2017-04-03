@@ -10,7 +10,7 @@ import java.util.Set;
 public class Forest {
 
   private Set<Node> nodeSet;
-  // Free tree is a graph with no cycles.
+  // Free tree is an undirected graph with no cycles.
   private Map<Integer, Graph> forestMap;
 
   public Forest() {
