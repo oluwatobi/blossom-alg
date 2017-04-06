@@ -56,6 +56,10 @@ public class Graph {
     return nodeMap.get(value);
   }
 
+  public boolean containsNode(Integer value) {
+    return nodeMap.containsKey(value);
+  }
+
   public Set<Node> getExposedVertices() {
     return exposedVerts;
   }
