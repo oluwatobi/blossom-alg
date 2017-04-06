@@ -54,22 +54,29 @@ public class Main {
 
   private static List<Edge> findMaxMatching(Graph graph, List<Edge> matching) {
     List<Edge> augPath;
-    do {
+    boolean finished = false;
+    while (!finished) {
       augPath = findAugPath(graph, matching);
+      finished = augPath.isEmpty();
       addAltEdges(augPath, matching);
-    } while (!augPath.isEmpty());
+    }
 
     return matching;
   }
 
   private static List<Edge> findAugPath(Graph graph, List<Edge> matching) {
     List<Edge> augPath;
+    Set<Node> nodesToCheck;
+
     Forest forest = new Forest();
-    Set<Node> nodesToCheck = graph.getExposedVertices();
+    graph.markEdges(matching);
+    nodesToCheck = graph.getExposedVertices();
+    System.out.println("++++SEPARATION++++");
+    System.out.println("Matching: " + matching);
     for (Node node : nodesToCheck) {
+      System.out.println("Added to forest: " + node);
       forest.addTreeRoot(node);
     }
-    graph.markEdges(matching);
     Set<Node> forestNodes = forest.getNodes();
     Node v, w;
     for (Node vForest : forestNodes) {
@@ -86,6 +93,11 @@ public class Main {
               } else {
                 augPath = blossomRecursion(graph, matching, forest, v, w);
               }
+              System.out.println("Exposed vertices: "
+                  + graph.getExposedVertices());
+              System.out.println("Curr Vertex: " + v);
+              System.out.println("Nodes to Check: " + nodesToCheck);
+              System.out.println("augPath: " + augPath + "\n");
               return augPath;
             } else {
               // Do nothing.
@@ -99,7 +111,8 @@ public class Main {
     return new ArrayList<>();
   }
 
-  private static List<Edge> returnAugPath(Graph graph, Forest forest, Node v, Node w) {
+  private static List<Edge> returnAugPath(Graph graph, Forest forest, Node v,
+      Node w) {
     Node rootV = v.getForestRoot();
     Node rootW = w.getForestRoot();
 
@@ -162,8 +175,17 @@ public class Main {
 
   private static List<Edge> liftPathWithBlossom(List<Edge> augPath,
       List<Edge> blossom) {
-    // TODO(oluwatobi): write that code breh.
-    throw new RuntimeException();
+    List<Edge> lifted = new ArrayList<>();
+    int contractedNodeValue = blossom.get(blossom.size() - 1).to.value;
+    for (int i = 0; i < augPath.size(); ++i) {
+      lifted.add(augPath.get(i));
+      if (augPath.get(i).to.value == contractedNodeValue) {
+        for (Edge edge : blossom) {
+          lifted.add(edge);
+        }
+      }
+    }
+    return lifted;
   }
 
   private static void addAltEdges(List<Edge> augPath, List<Edge> matching) {
@@ -180,7 +202,6 @@ public class Main {
         nodeCheck.add(augPath.get(i).from);
         nodeCheck.add(augPath.get(i).to);
       }
-      System.out.println(matching);
     }
   }
 }

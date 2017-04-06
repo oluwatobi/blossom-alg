@@ -9,6 +9,8 @@ import java.util.Set;
 
 public class Forest {
 
+  private static final boolean DEBUG = false;
+
   private Set<Node> nodeSet;
   // Free tree is an undirected graph with no cycles.
   private Map<Integer, Graph> forestMap;
@@ -18,25 +20,37 @@ public class Forest {
     this.forestMap = new HashMap<>();
   }
 
-  public void addTreeRoot(Node node) {
+  public boolean addTreeRoot(Node node) {
+    if (nodeSet.contains(node)) {
+      return false;
+    }
     Graph graph = new Graph();
     Node forestNode = graph.addOrRetrieveNode(node.value);
     nodeSet.add(forestNode);
     forestMap.put(node.value, graph);
     forestNode.setForestRoot(forestNode);
     node.setForestRoot(forestNode);
+    return true;
   }
 
   public Set<Node> getNodes() {
-    return nodeSet;
+    return new HashSet<>(nodeSet);
   }
 
   public boolean contains(Node node) {
     return forestMap.containsKey(node.value);
   }
 
-  public void addToForest(List<Edge> edges, Node v, Node w) {
+  public boolean addToForest(List<Edge> edges, Node v, Node w) {
     Graph tree = forestMap.get(v.value);
+    if (nodeSet.contains(w)) {
+      return false;
+    }
+    System.out.println("v: " + v);
+    System.out.println("w: " + w);
+    System.out.println("edges: " + edges);
+    System.out.println("nodes: " + nodeSet);
+    System.out.println(this);
     Node x = findAdjacentTo(edges, w);
     Node vInt = tree.addOrRetrieveNode(v.value);
     Node wInt = tree.addOrRetrieveNode(w.value);
@@ -50,6 +64,7 @@ public class Forest {
     // Add edge (w, x) to the forest
     tree.addEdge(w.value, x.value);
     tree.addEdge(x.value, w.value);
+    return true;
   }
 
   private Node findAdjacentTo(List<Edge> edges, Node w) {
