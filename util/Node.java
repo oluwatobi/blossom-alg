@@ -11,43 +11,24 @@ public class Node {
 
   public final Integer value;
   public boolean visited;
-  private Set<Node> nodeSet;
-  private Map<Node, Edge> edgeMap;
-  private List<Edge> edgeList;
-  private Node forestRoot;
 
   public Node(Integer value) {
     this.value = value;
-    this.nodeSet = new HashSet<>();
-    this.edgeMap = new HashMap<>();
-    this.edgeList = new ArrayList<>();
     this.visited = false;
   }
 
-  public List<Node> getAdjacentNodeList() {
-    return new ArrayList<>(nodeSet);
+  public static Node getSmallerNode(Node node1, Node node2){
+    if (node1.value>node2.value)
+      return node1;
+    else
+      return node2;
   }
 
-  public void setForestRoot(Node node) {
-    this.forestRoot = node;
-  }
-
-  public Node getForestRoot() {
-    return forestRoot;
-  }
-
-  public void addEdge(Node node, Edge edge) {
-    nodeSet.add(node);
-    edgeMap.put(node, edge);
-    edgeList.add(edge);
-  }
-
-  public Edge getEdge(Node node) {
-    return edgeMap.get(node);
-  }
-
-  public List<Edge> getEdgeList() {
-    return edgeList;
+  public static Node getBiggerNode(Node node1, Node node2){
+    if (node1.value<=node2.value)
+      return node1;
+    else
+      return node2;
   }
  
   @Override

@@ -1,4 +1,4 @@
-package util;
+//package util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,10 +14,13 @@ public class Forest {
   private Set<Node> nodeSet;
   // Free tree is an undirected graph with no cycles.
   private Map<Integer, Graph> forestMap;
+  private Map<Integer, Node> nodeMap;
+  private Map<Integer, Integer> distanceMap;
 
   public Forest() {
     this.nodeSet = new HashSet<>();
     this.forestMap = new HashMap<>();
+    this.distanceMap = new HashMap<>();
   }
 
   public boolean addTreeRoot(Node node) {
@@ -27,9 +30,10 @@ public class Forest {
     Graph graph = new Graph();
     Node forestNode = graph.addOrRetrieveNode(node.value);
     nodeSet.add(forestNode);
-    forestMap.put(node.value, graph);
-    forestNode.setForestRoot(forestNode);
-    node.setForestRoot(forestNode);
+    forestMap.put(forestNode.value, graph);
+    nodeMap.put(forestNode.value, forestNode);
+    distanceMap.put(forestNode.value, 0);
+    forestNode.setTreeRoot(forestNode);
     return true;
   }
 
@@ -41,7 +45,7 @@ public class Forest {
     return forestMap.containsKey(node.value);
   }
 
-  public boolean addToForest(List<Edge> edges, Node v, Node w) {
+  public boolean addToForest(Set<Edge> edges, Node v, Node w) {
     Graph tree = forestMap.get(v.value);
     if (nodeSet.contains(w)) {
       return false;
@@ -55,22 +59,26 @@ public class Forest {
     Node vInt = tree.addOrRetrieveNode(v.value);
     Node wInt = tree.addOrRetrieveNode(w.value);
     Node xInt = tree.addOrRetrieveNode(x.value);
-    Node forestRoot = v.getForestRoot();
-    wInt.setForestRoot(forestRoot);
-    xInt.setForestRoot(forestRoot);
+    Node treeRoot = v.getTreeRoot();
+    wInt.setTreeRoot(treeRoot);
+    xInt.setTreeRoot(treeRoot);
     // Add edge (v, w) to the forest
     tree.addEdge(v.value, w.value);
-    tree.addEdge(w.value, v.value);
     // Add edge (w, x) to the forest
     tree.addEdge(w.value, x.value);
-    tree.addEdge(x.value, w.value);
+    // Update distance
+    distanceMap.put(w.value, distanceMap.get(v.value)+1);
+    distanceMap.put(x.value, distanceMap.get(v.value)+1);
     return true;
   }
 
-  private Node findAdjacentTo(List<Edge> edges, Node w) {
+  private Node findAdjacentTo(Set<Edge> edges, Node w) {
     for (Edge edge : edges) {
       if (edge.from.value == w.value) {
         return edge.to;
+      }
+      if (edge.to.value == w.value) {
+        return edge.from;
       }
     }
     return null;
@@ -81,13 +89,12 @@ public class Forest {
     return path;
   }
 
-  public int distance(Node from, Node to) {
-    List<Edge> path = dfs(from, to);
-    return path.size();
+  public int distance(Node node) {
+    return distanceMap.get(node.value);
   }
 
   private List<Edge> dfs(Node v, Node w) {
-    Graph tree = forestMap.get(v.getForestRoot().value);
+    Graph tree = forestMap.get(v.getTreeRoot().value);
     Node vInt = tree.getNode(v.value);
     Node wInt = tree.getNode(w.value);
     List<Edge> path = new ArrayList<>();

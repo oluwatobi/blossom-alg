@@ -7,9 +7,15 @@ public class Edge {
   public boolean marked;
 
   public Edge(Node from, Node to) {
-    this.from = from;
-    this.to = to;
+    this.from = Node.getSmallerNode(from, to);
+    this.to = Node.getBiggerNode(from, to);
     this.marked = false;
+  }
+
+  public Node getOtherEnd(Node oneEnd){
+    if (this.from.value==oneEnd.value)
+      return this.to;
+    else return this.from;
   }
 
   @Override

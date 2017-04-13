@@ -9,113 +9,86 @@ import java.util.Set;
 
 public class Graph {
 
-  private HashMap<Integer, Node> nodeMap;
+  private Map<Integer, Node> nodeMap;
+  private Map<Node, Map<Node, Edge>> adjacencyList;
   private Set<Edge> edgeSet;
-  private Set<Edge> markedEdges;
-  private Map<Node, List<Edge>> edgeMaping;
-  private Set<Node> exposedVerts;
-  protected SuperNode contractedNode;
+  protected Node contractedNode;
 
   public Graph() {
     this.nodeMap = new HashMap<>();
     this.edgeSet = new HashSet<>();
-    this.markedEdges = new HashSet<>();
-    this.edgeMaping = new HashMap<>();
-    this.exposedVerts = new HashSet<>();
+    this.adjacencyList = new HashMap<>();
   }
 
   public int size() {
     return nodeMap.size();
   }
 
-  public void addEdge(Integer from, Integer to) {
-    Node f = addOrRetrieveNode(from);
-    Node t = addOrRetrieveNode(to);
-    Edge edge = new Edge(f, t);
-    f.addEdge(t, edge);
-    edgeSet.add(edge);
-  }
-
-  public Edge getEdge(Integer from, Integer to) {
-    Node f = nodeMap.get(from);
-    Node t = nodeMap.get(to);
-    return f.getEdge(t);
-  }
-
   protected Node addOrRetrieveNode(Integer value) {
     Node node = nodeMap.get(value);
     if (node == null) {
       node = new Node(value);
-      exposedVerts.add(node);
-      nodeMap.put(value, node);
+      this.nodeMap.put(value, node);
+      this.adjacencyList.put(node, new HashMap<>());
     }
     return node;
+  }
+
+  public void addEdge(Integer from, Integer to) {
+    Node f = addOrRetrieveNode(from);
+    Node t = addOrRetrieveNode(to);
+    Edge edge = new Edge(f, t);
+    this.adjacencyList.get(f).put(t, edge);
+    this.adjacencyList.get(t).put(f, edge);
+    this.edgeSet.add(edge);
+  }
+
+  public void addEdge(Edge edge){
+    this.adjacencyList.get(edge.from).put(edge.to, edge);
+    this.adjacencyList.get(edge.to).put(edge.from, edge);
+    this.edgeSet.add(edge);
+  }
+
+  public void removeEdge(Node from, Node to){
+    this.edgeSet.remove(this.adjacencyList.get(from).get(to));
+    this.adjacencyList.get(from).remove(to);
+    this.adjacencyList.get(to).remove(from);
+  }
+
+  public Edge getEdge(Node node1, Node node2) {
+    return this.adjacencyList.get(node1).get(node2);
   }
 
   public Node getNode(Integer value) {
     return nodeMap.get(value);
   }
 
+  public Set<Node> getAdjacentNodes(Node node){
+    return new HashSet<Node>(this.adjacencyList.get(node).keySet());
+  }
+
+  public List<Edge> getAdjacentEdges(Node node){
+    return new ArrayList<Edge>(this.adjacencyList.get(node).values());
+  }
+
+  public Set<Node> getAllNodes(){
+    return new HashSet<Node>(this.nodeMap.values());
+  }
+
+  public Set<Edge> getAllEdges(){
+    return new HashSet<Edge>(this.edgeSet);
+  }
+
   public boolean containsNode(Integer value) {
     return nodeMap.containsKey(value);
   }
 
-  public Set<Node> getExposedVertices() {
-    return exposedVerts;
+  public void addContractedNode(Node node) {
+    this.contractedNode = node;
   }
 
-  public void markEdges(List<Edge> edges) {
-    for (Edge edge : edges) {
-      markEdge(edge);
-    }
-  }
-
-  public void markEdge(Edge edge) {
-    markEdge(edge.from, edge.to);
-  }
-
-  public void markEdge(Node v, Node w) {
-    Edge edge = v.getEdge(w);
-    edgeSet.remove(edge);
-    markedEdges.add(edge);
-    exposedVerts.remove(v);
-    exposedVerts.remove(w);
-    edge.marked = true;
-  }
-
-  public Graph contractBlossom(List<Edge> blossom) {
-    Graph contracted = new Graph();
-    Set<Node> blossomNodes = new HashSet<>();
-    Set<Edge> newEdgeSet = new HashSet<>();
-    for (Edge edge : blossom) {
-      blossomNodes.add(edge.from);
-      blossomNodes.add(edge.to);
-    }
-    SuperNode node = new SuperNode(blossom.get(blossom.size() - 1).from.value);
-    for (Edge edge : edgeSet) {
-      if (blossomNodes.contains(edge.from) && blossomNodes.contains(edge.to)) {
-        // edge internal to the blossom.
-      } else {
-        if (blossomNodes.contains(edge.from)) {
-          newEdgeSet.add(new Edge(node, edge.to));
-        } else if (blossomNodes.contains(edge.to)) {
-          newEdgeSet.add(new Edge(edge.from, node));
-        }
-      }
-    }
-
-    contracted.contractedNode = node;
-    for (Edge edge : newEdgeSet) {
-      contracted.addEdge(edge.from.value, edge.to.value);
-      if (edge.marked) {
-        contracted.markEdge(edge.from, edge.to);
-      }
-    }
-    return contracted;
-  }
-
-  public SuperNode getContractedNode() {
-    return contractedNode;
+  public Node getContractedNode() {
+    return this.contractedNode;
   }
 
   @Override
