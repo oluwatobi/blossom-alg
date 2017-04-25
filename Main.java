@@ -19,6 +19,8 @@ public class Main {
   public static void main(String[] args) {
     Graph graph = readGraphFile(args[0]);
     Set<Edge> matching = blossomAlgorithm(graph);
+    System.out.println();
+    System.out.println("---------Result-------");
     System.out.println("Graph Matching size: " + matching.size());
     System.out.println("Graph Matching:\n\t" + matching);
   }
@@ -60,7 +62,7 @@ public class Main {
     while (!finished) {
       augPath = findAugPath(graph, matching);
       finished = augPath.isEmpty();
-      matching = addAltEdges(augPath, graph);
+      matching = addAltEdges(augPath, graph, matching);
     }
 
     return matching;
@@ -70,12 +72,12 @@ public class Main {
     List<Node> augPath;
     Set<Node> exposedVertices;
     Set<Edge> unmarkedEdges;
-    Set<Node> unmarkedVertices;
+    Set<Node> nodesToCheck;
 
     // unmark all vertices and edges in the graph, and then mark all
     // edges in the current matching
     unmarkedEdges = getUnmarkedEdges(g, matching);
-    unmarkedVertices = g.getAllNodes();
+    nodesToCheck = getExposedNodes(g,matching);
 
     // build a forest and add all exposed vertices as roots
     exposedVertices = getExposedNodes(g, matching);
@@ -92,46 +94,55 @@ public class Main {
     }
 
     Node v, w;
-    while (unmarkedVertices.size()>=1) {
-      v = unmarkedVertices.iterator().next();
+    while (nodesToCheck.size()>=1) {
+      v = nodesToCheck.iterator().next();
+      System.out.println("Working on vertex "+v);
       for (Edge edge : g.getAdjacentEdges(v)) {
         if (unmarkedEdges.contains(edge)) {
           w = edge.getOtherEnd(v);
+          System.out.println("    Looking at vertices "+v+" and "+w);
           if (!rootMap.containsKey(w)) {
             Node x = findOtherNodeInMatching(matching, w);
             addToForest(rootMap, parentMap, heightMap, v, w, x);
+            nodesToCheck.add(x);
           } else {
             if (heightMap.get(w) % 2 == 0) {
               if (rootMap.get(v) != rootMap.get(w)) {
                 augPath = returnAugPath(g, rootMap, parentMap, heightMap, v, w);
-              } else {
+              } 
+              else {
+                System.out.println();
+                System.out.println("Starting blossom recursion");
+                System.out.println("--------------------------");
                 augPath = blossomRecursion(g, matching, rootMap, parentMap, heightMap, v, w);
+                System.out.println("Done with blossom recursion");
+                System.out.println("---------------------------");
               }
               System.out.println("augPath: " + augPath + "\n");
               return augPath;
             } else {
-              // Do nothing.
+              // do nothing
             }
           }
         }
         unmarkedEdges.remove(edge);
       }
-      unmarkedVertices.remove(v);
+      nodesToCheck.remove(v);
     }
     // Returning the empty path.
+    System.out.println("Could not find any augmenting path");
     return new ArrayList<>();
   }
 
   private static void addToForest(Map<Node, Node> rootMap, Map<Node, Node> parentMap, 
       Map<Node, Integer> heightMap, Node v, Node w, Node x){
-    System.out.println("v: " + v);
-    System.out.println("w: " + w);
-    System.out.println("root: "+rootMap.get(v));
+    System.out.println("    Adding edges to forest");
+    System.out.println("    v: " + v+" w: " + w + " x: "+x);
     Node root = rootMap.get(v);
     rootMap.put(w,root);
     rootMap.put(x,root);
     parentMap.put(w,v);
-    parentMap.put(v,x);
+    parentMap.put(x,w);
     heightMap.put(w, heightMap.get(v)+1);
     heightMap.put(x, heightMap.get(v)+2);
     return;
@@ -160,6 +171,7 @@ public class Main {
     curr = w;
     while (curr!=null){
       augPath.add(curr);
+      curr = parentMap.get(curr);
     }
     return augPath;
   }
@@ -169,6 +181,7 @@ public class Main {
     // Construct blossom
     Node root = rootMap.get(v);
     List<Node> blossom = new ArrayList<>();
+    System.out.print("Blossom is: ");
     Node curr = v;
     while (curr!=null){
       blossom.add(0, curr);
@@ -179,6 +192,9 @@ public class Main {
       blossom.add(curr);
       curr = parentMap.get(curr);
     }
+    for (Node node: blossom)
+      System.out.print(node+" ");
+    System.out.println();
 
     Graph contractedGraph = contractBlossom(graph, blossom);
     Node contractedNode = contractedGraph.getContractedNode();
@@ -188,6 +204,7 @@ public class Main {
         contractedMatching);
     if (containsEdgeWithNode(augPath, contractedNode)) {
       augPath = liftPathWithBlossom(augPath, blossom, graph);
+      System.out.println("Lifted augmenting path is: "+augPath);
     }
     return augPath;
   }
@@ -211,27 +228,35 @@ public class Main {
   public static Graph contractBlossom(Graph g, List<Node> blossom) {
     Graph contracted = new Graph();
     Node contractedNode = blossom.get(0);
+    System.out.println("Beginning contraction to "+contractedNode);
 
     // Add edges to contracted graph
     for (Edge edge : g.getAllEdges()){
+      //System.out.println("Added edge: "+edge);
       contracted.addEdge(edge);
     }
     // Delete edges internal to the blossom
+    Edge removed;
     for (int i=0;i<blossom.size()-1;i++){
-      contracted.removeEdge(blossom.get(i), blossom.get(i+1));
+      removed = contracted.removeEdge(blossom.get(i), blossom.get(i+1));
+      //System.out.println("Removed edge: "+removed);
     }
-    contracted.removeEdge(blossom.get(blossom.size()-1), blossom.get(0));
+    removed = contracted.removeEdge(blossom.get(blossom.size()-1), blossom.get(0));
+    //System.out.println("Removed edge: "+removed);
     // Change edges from blossom to other nodes to the contracted node
     for (int i=1;i<blossom.size();i++){
       for (Node node: g.getAdjacentNodes(blossom.get(i))){
         int prev = i-1;
         int next = (i+1)%blossom.size();
         if (node!=blossom.get(prev)&&node!=blossom.get(next)){
-          contracted.removeEdge(blossom.get(i), node);
-          contracted.addEdge(g.getEdge(node, contractedNode));
+          removed = contracted.removeEdge(blossom.get(i), node);
+          //System.out.println("Removed edge: "+removed);
+          contracted.addEdge(node.value, contractedNode.value);
+          //System.out.println("Added edge: "+contracted.getEdge(node, contractedNode));
         }
       }
     }
+    contracted.addContractedNode(contractedNode);
 
     return contracted;
   }
@@ -285,7 +310,7 @@ public class Main {
           }
           else{
             lifted.add(blossom.get(0));
-            for (int j=blossom.size();j>=outgoingIndex;j--){
+            for (int j=blossom.size()-1;j>=outgoingIndex;j--){
               lifted.add(blossom.get(j));
             }
           }
@@ -323,12 +348,14 @@ public class Main {
     return -1;
   }
 
-  private static Set<Edge> addAltEdges(List<Node> augPath, Graph g) {
-    Set<Edge> matching = new HashSet<>();
-    for(int i = 0; i < augPath.size(); i += 1) {
+  private static Set<Edge> addAltEdges(List<Node> augPath, Graph g, Set<Edge> matching) {
+    for(int i = 0; i < augPath.size()-1; i += 1) {
       // Add to matching
       if (i%2==0)
         matching.add(g.getEdge(augPath.get(i), augPath.get(i+1)));
+      // Substract from matching
+      if (i%2==1)
+        matching.remove(g.getEdge(augPath.get(i), augPath.get(i+1)));
     }
     return matching;
   }

@@ -44,15 +44,25 @@ public class Graph {
   }
 
   public void addEdge(Edge edge){
+    if (!this.nodeMap.containsKey(edge.from.value)){
+      this.nodeMap.put(edge.from.value, edge.from);
+      this.adjacencyList.put(edge.from, new HashMap<>());
+    }
+    if (!this.nodeMap.containsKey(edge.to.value)){
+      this.nodeMap.put(edge.to.value, edge.to);
+      this.adjacencyList.put(edge.to, new HashMap<>());
+    }
     this.adjacencyList.get(edge.from).put(edge.to, edge);
     this.adjacencyList.get(edge.to).put(edge.from, edge);
     this.edgeSet.add(edge);
   }
 
-  public void removeEdge(Node from, Node to){
-    this.edgeSet.remove(this.adjacencyList.get(from).get(to));
+  public Edge removeEdge(Node from, Node to){
+    Edge edge = this.adjacencyList.get(from).get(to);
+    this.edgeSet.remove(edge);
     this.adjacencyList.get(from).remove(to);
     this.adjacencyList.get(to).remove(from);
+    return edge;
   }
 
   public Edge getEdge(Node node1, Node node2) {

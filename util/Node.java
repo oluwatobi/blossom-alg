@@ -18,14 +18,14 @@ public class Node {
   }
 
   public static Node getSmallerNode(Node node1, Node node2){
-    if (node1.value>node2.value)
+    if (node1.value<node2.value)
       return node1;
     else
       return node2;
   }
 
   public static Node getBiggerNode(Node node1, Node node2){
-    if (node1.value<=node2.value)
+    if (node1.value>=node2.value)
       return node1;
     else
       return node2;
